@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:bubble/bubble.dart';
-import 'package:web_socket_channel/io.dart';
+
+import '../blocs/messages.dart';
 
 class ChatScreen extends StatelessWidget {
-  final _channel = IOWebSocketChannel.connect('ws://echo.websocket.org');
   final List<String> _messages = [];
   final _messageInputController = TextEditingController();
+  final ScrollController _scrollController = new ScrollController();
+  final bloc = MessagesBloc();
 
   @override
   Widget build(BuildContext context) {
@@ -13,48 +15,76 @@ class ChatScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('Chat'),
       ),
-      body: StreamBuilder(
-        stream: _channel.stream,
-        builder: (BuildContext ctx, AsyncSnapshot snapshot) {
-          print('rebuild');
+      body: Column(
+        children: <Widget>[
+          Expanded(
+            child: StreamBuilder(
+              stream: bloc.messages,
+              builder: (BuildContext ctx, AsyncSnapshot snapshot) {
+                print('rebuild');
 
-          if (snapshot.hasData && !_messages.contains(snapshot.data)) {
-            _messages.add(snapshot.data as String);
-          }
+                if (snapshot.hasData) {
+                  _messages.insert(0, snapshot.data as String);
+                }
 
-          return ListView.builder(
-            itemCount: _messages.length + 1,
-            itemBuilder: (_, index) {
-              if (index == _messages.length) {
-                return Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: Container(
-                        alignment: Alignment.bottomCenter,
-                        height: MediaQuery.of(context).size.height * 0.1,
-                        child: TextField(
-                          controller: _messageInputController,
-                          textInputAction: TextInputAction.send,
-                        ),
+                return ListView.builder(
+                  controller: _scrollController,
+                  reverse: true,
+                  itemCount: _messages.length,
+                  itemBuilder: (_, index) {
+                    print(_messages);
+
+                    _scrollController.animateTo(
+                      0.0,
+                      duration: Duration(milliseconds: 300),
+                      curve: Curves.easeOut,
+                    );
+
+                    bool sentByMe = _messages[index].length < 7 ||
+                        _messages[index].substring(0, 7) != 'echoed:';
+                    return Bubble(
+                      child: Text(
+                        _messages[index],
+                        style: TextStyle(color: Colors.white, fontSize: 15.0),
                       ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.send),
-                      onPressed: () {
-                        print(_messageInputController.text);
-                        _channel.sink.add(_messageInputController.text);
-                      },
-                    )
-                  ],
+                      elevation: 5,
+                      margin: const BubbleEdges.only(top: 10.0),
+                      color: sentByMe
+                          ? Theme.of(context).primaryColor
+                          : Theme.of(context).accentColor,
+                      nip: sentByMe ? BubbleNip.rightTop : BubbleNip.leftTop,
+                      alignment:
+                          sentByMe ? Alignment.topRight : Alignment.topLeft,
+                    );
+                  },
                 );
-              }
-
-              return Bubble(
-                child: Text(_messages[index]),
-              );
-            },
-          );
-        },
+              },
+            ),
+          ),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Container(
+                  alignment: Alignment.bottomCenter,
+                  child: TextField(
+                    controller: _messageInputController,
+                    minLines: 1,
+                    maxLines: 3,
+                    textInputAction: TextInputAction.newline,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.send),
+                onPressed: () {
+                  print(_messageInputController.text);
+                  bloc.sendMessage(_messageInputController.text);
+                  _messageInputController.clear();
+                },
+              )
+            ],
+          ),
+        ],
       ),
     );
   }

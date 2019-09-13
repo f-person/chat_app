@@ -19,6 +19,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  rxdart: ^0.22.2
   web_socket_channel: ^1.0.15
   bubble: ^1.1.9+1
 

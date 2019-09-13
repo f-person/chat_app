@@ -9,6 +9,13 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(title: 'Chat', home: ChatScreen());
+    return MaterialApp(
+      title: 'Chat',
+      theme: ThemeData(
+        primarySwatch: Colors.indigo,
+        accentColor: Colors.pinkAccent,
+      ),
+      home: ChatScreen(),
+    );
   }
 }
