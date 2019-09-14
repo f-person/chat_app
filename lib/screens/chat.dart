@@ -6,8 +6,16 @@ import '../blocs/messages.dart';
 class ChatScreen extends StatelessWidget {
   final List<String> _messages = [];
   final _messageInputController = TextEditingController();
-  final ScrollController _scrollController = new ScrollController();
+  static final ScrollController _scrollController = new ScrollController();
   final bloc = MessagesBloc();
+
+  static void animateToBottom() {
+    _scrollController.animateTo(
+      0.0,
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,12 +41,6 @@ class ChatScreen extends StatelessWidget {
                   itemCount: _messages.length,
                   itemBuilder: (_, index) {
                     print(_messages);
-
-                    _scrollController.animateTo(
-                      0.0,
-                      duration: Duration(milliseconds: 300),
-                      curve: Curves.easeOut,
-                    );
 
                     bool sentByMe = _messages[index].length < 7 ||
                         _messages[index].substring(0, 7) != 'echoed:';
@@ -78,8 +80,10 @@ class ChatScreen extends StatelessWidget {
                 icon: Icon(Icons.send),
                 onPressed: () {
                   print(_messageInputController.text);
-                  bloc.sendMessage(_messageInputController.text);
-                  _messageInputController.clear();
+                  if (_messageInputController.text.isNotEmpty) {
+                    bloc.sendMessage(_messageInputController.text);
+                    _messageInputController.clear();
+                  }
                 },
               )
             ],
