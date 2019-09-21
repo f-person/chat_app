@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:bubble/bubble.dart';
 
+import '../models/message.dart';
+import '../models/user.dart';
+import '../blocs/users.dart';
 import '../blocs/messages.dart';
 
 class ChatScreen extends StatelessWidget {
-  final List<String> _messages = [];
+  final List<Message> _messages = [];
   final _messageInputController = TextEditingController();
   static final ScrollController _scrollController = new ScrollController();
-  final bloc = MessagesBloc();
+  final messagesBloc = MessagesBloc();
+  final usersBloc = UsersBloc();
+  final _authenticatedUser = User.empty();
+
+  ChatScreen() {
+    usersBloc.getUserFromPrefs().then((User user) {
+      _authenticatedUser.update(user.id, user.name);
+    });
+  }
 
   static void animateToBottom() {
     _scrollController.animateTo(
@@ -27,12 +38,12 @@ class ChatScreen extends StatelessWidget {
         children: <Widget>[
           Expanded(
             child: StreamBuilder(
-              stream: bloc.messages,
+              stream: messagesBloc.messages,
               builder: (BuildContext ctx, AsyncSnapshot snapshot) {
                 print('rebuild');
 
                 if (snapshot.hasData) {
-                  _messages.insert(0, snapshot.data as String);
+                  _messages.insert(0, snapshot.data as Message);
                 }
 
                 return ListView.builder(
@@ -42,11 +53,11 @@ class ChatScreen extends StatelessWidget {
                   itemBuilder: (_, index) {
                     print(_messages);
 
-                    bool sentByMe = _messages[index].length < 7 ||
-                        _messages[index].substring(0, 7) != 'echoed:';
+                    bool sentByMe =
+                        _messages[index].author.id == _authenticatedUser.id;
                     return Bubble(
                       child: Text(
-                        _messages[index],
+                        _messages[index].body,
                         style: TextStyle(color: Colors.white, fontSize: 15.0),
                       ),
                       elevation: 5,
@@ -81,7 +92,7 @@ class ChatScreen extends StatelessWidget {
                 onPressed: () {
                   print(_messageInputController.text);
                   if (_messageInputController.text.isNotEmpty) {
-                    bloc.sendMessage(_messageInputController.text);
+                    messagesBloc.sendMessage(_messageInputController.text);
                     _messageInputController.clear();
                   }
                 },

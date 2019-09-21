@@ -23,6 +23,7 @@ dependencies:
   web_socket_channel: ^1.0.15
   bubble: ^1.1.9+1
   flutter_local_notifications: ^0.8.2+1
+  shared_preferences: ^0.5.3+4
 
 dev_dependencies:
   flutter_test:
