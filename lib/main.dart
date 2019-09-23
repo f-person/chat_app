@@ -1,8 +1,10 @@
+import 'package:chat_app/screens/auth.dart';
 import 'package:flutter/material.dart';
 
 import './screens/chat.dart';
 
 void main() {
+  // TODO check if there is an authenticated user for routing
   runApp(MyApp());
 }
 
@@ -15,7 +17,10 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.indigo,
         accentColor: Colors.pinkAccent,
       ),
-      home: ChatScreen(),
+      routes: {
+        '/': (context) => AuthScreen(),
+        '/chat': (context) => ChatScreen(),
+      },
     );
   }
 }

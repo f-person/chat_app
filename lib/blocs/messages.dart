@@ -16,10 +16,10 @@ class MessagesBloc {
   final _messagesSubject = BehaviorSubject<Message>();
   var _channel = IOWebSocketChannel.connect('$wsUrl');
   int _notificationIndex = 0;
-  User authenticatedUser;
+  User _authenticatedUser;
 
   void init() async {
-    authenticatedUser = await UsersBloc().getUserFromPrefs();
+    _authenticatedUser = await UsersBloc().getUserFromPrefs();
 
     final _initializationSettingsAndroid =
         fln.AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -90,7 +90,12 @@ class MessagesBloc {
   }
 
   void sendMessage(String text) {
-    // TODO also encode to json and add to stream
-    _channel.sink.add(text);
+    final Map<String, dynamic> messageData = {
+      'body': text,
+      'authorid': _authenticatedUser.id,
+    };
+    final messageJSON = json.encode(messageData);
+
+    _channel.sink.add(messageJSON);
   }
 }
